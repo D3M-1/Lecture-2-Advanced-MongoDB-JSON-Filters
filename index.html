@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Lecture 2: Advanced Database (SE203) | Cairo University</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: #eef2f8; color: #1a2540; line-height: 1.4; padding: 16px; touch-action: manipulation; }
+
+    /* ============ CONTAINER THEME (Navy + Gold) ============ */
+    .container {
+      --bg-container: #ffffff; --bg-card: #ffffff; --bg-option: #f5f8fc; --bg-option-hover: #e6eef8;
+      --bg-answer: #fef9ec; --bg-essay-answer: #fef9ec; --bg-toolbar: #e2e8f0; --bg-notes: #f5f8fc;
+      --text-main: #1a2540; --text-strong: #0b1a33; --text-muted: #64748b; --text-option: #2c3a55; --text-rationale: #7c5a08;
+      --border-card: #d6e0ee; --border-note: #b8c8de; --border-option: #d6e0ee;
+      --accent: #d4a017; --accent-2: #f0b429;
+      --correct-bg: #fef9ec; --correct-border: #d4a017; --correct-text: #7c5a08;
+      --incorrect-bg: #fee2e2; --incorrect-border: #ef4444; --incorrect-text: #b91c1c;
+      --shadow: 0 6px 24px rgba(11, 26, 51, 0.15);
+      max-width: 210mm; margin: 0 auto; background: var(--bg-container); padding: 12mm 10mm;
+      box-shadow: var(--shadow); border-radius: 8px; transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    .container.dark-mode {
+      --bg-container: #0b1a33; --bg-card: #0f2240; --bg-option: #0b1a33; --bg-option-hover: #1e3a6b;
+      --bg-answer: #2a1f06; --bg-essay-answer: #2a1f06; --bg-toolbar: #12264a; --bg-notes: #0f2240;
+      --text-main: #e0e8f5; --text-strong: #f8fafc; --text-muted: #94a3b8; --text-option: #cbd5e1; --text-rationale: #ffffff;
+      --border-card: #1e3a6b; --border-note: #1e3a6b; --border-option: #1e3a6b;
+      --accent: #f0b429; --accent-2: #fbbf24;
+      --correct-bg: #2a1f06; --correct-border: #f0b429; --correct-text: #fbbf24;
+      --incorrect-bg: #450a0a; --incorrect-border: #f87171; --incorrect-text: #fca5a5;
+      --shadow: 0 6px 24px rgba(0,0,0,0.6);
+    }
+
+    /* ============ TOOLBAR & TIMER ============ */
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .timer-box { display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 8px 16px; border-radius: 8px; border: 2px solid var(--accent); box-shadow: var(--shadow); font-weight: 700; font-size: 16px; color: var(--text-strong); }
+    .timer-display { color: var(--incorrect-border); font-family: monospace; font-size: 20px; min-width: 60px; text-align: center; }
+    .timer-display.warning { animation: blink 1s infinite; }
+    @keyframes blink { 50% { opacity: 0.5; } }
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn { padding: 9px 14px; font-size: 13px; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; }
+    .btn-toggle, .btn-theme, .btn-timer { background-color: var(--bg-toolbar); color: var(--text-strong); border: 1px solid var(--border-card); }
+    .btn-toggle:hover, .btn-theme:hover, .btn-timer:hover { opacity: 0.85; }
+    .btn-print { background: linear-gradient(135deg, #d4a017 0%, #f0b429 100%); color: #0b1a33; }
+    .btn-print:hover { background: linear-gradient(135deg, #f0b429 0%, #fbbf24 100%); }
+    .btn-dropdown { position: relative; display: inline-block; }
+    .dropdown-content { display: none; position: absolute; right: 0; top: 100%; margin-top: 6px; background-color: var(--bg-card); min-width: 220px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border-radius: 6px; z-index: 100; border: 1px solid var(--border-card); overflow: hidden; }
+    .dropdown-content button { display: block; width: 100%; padding: 10px 14px; text-align: left; background: transparent; border: none; color: var(--text-main); font-size: 12.5px; cursor: pointer; }
+    .dropdown-content button:hover { background: var(--bg-option-hover); }
+    .btn-dropdown:hover .dropdown-content, .btn-dropdown.open .dropdown-content { display: block; }
+
+    /* ============ HEADER ============ */
+    .header { background: linear-gradient(135deg, #060d1c 0%, #0b1a33 40%, #12264a 70%, #1e3a6b 100%); color: #ffffff; border-radius: 8px; padding: 14px 18px; margin-bottom: 14px; border-left: 6px solid #d4a017; position: relative; overflow: hidden; }
+    .header::after { content: ""; position: absolute; top: 0; right: 0; width: 120px; height: 120px; background: radial-gradient(circle, rgba(212,160,23,0.15) 0%, transparent 70%); pointer-events: none; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212,160,23,0.3); padding-bottom: 8px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+    .institution-info h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.5px; color: #ffffff; }
+    .institution-info h2 { font-size: 13px; font-weight: 500; color: #94a3b8; }
+    .exam-tag { background: rgba(212, 160, 23, 0.15); border: 1px solid #d4a017; color: #f0b429; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .header-details { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 12px; }
+    .detail-item span { display: block; color: #d4a017; font-size: 10px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+    .detail-item strong { color: #f8fafc; font-size: 12px; }
+
+    /* ============ SECTION DIVIDER ============ */
+    .section-divider { background: linear-gradient(135deg, #0b1a33 0%, #12264a 60%, #1e3a6b 100%); color: #ffffff; padding: 9px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 10px 0; display: flex; align-items: center; gap: 8px; border-left: 4px solid #f0b429; break-inside: avoid; }
+    .page-break { page-break-before: always; break-before: page; }
+
+    /* ============ NOTES ============ */
+    .notes-page-container { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
+    .notes-card { border: 1.5px solid var(--border-note); border-radius: 8px; padding: 12px 16px; background: var(--bg-notes); break-inside: avoid; }
+    .notes-title { font-size: 13.5px; font-weight: 700; color: var(--text-strong); margin-bottom: 8px; border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
+    .notes-grid { display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 12px; color: var(--text-option); }
+    .notes-item { display: flex; gap: 8px; align-items: baseline; }
+    .notes-bullet { color: var(--accent); font-weight: bold; }
+    code { font-family: 'Courier New', Courier, monospace; background: #e2e8f0; padding: 2px 5px; border-radius: 4px; color: #b91c1c; font-size: 12px; direction: ltr; display: inline-block; }
+
+    /* ============ QUESTION CARDS ============ */
+    .question-list { display: flex; flex-direction: column; gap: 10px; }
+    .question-card { border: 1.5px solid var(--border-card); border-radius: 8px; padding: 12px 14px; background: var(--bg-card); break-inside: avoid; page-break-inside: avoid; position: relative; transition: background-color 0.3s, border-color 0.3s; }
+    .question-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .q-number { background: linear-gradient(135deg, #0b1a33 0%, #1e3a6b 100%); color: #ffffff; font-weight: 700; font-size: 12px; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; border: 1px solid #d4a017; }
+    .container.dark-mode .q-number { color: #0b1a33; background: linear-gradient(135deg, #f0b429 0%, #fbbf24 100%); border-color: #f0b429; }
+    
+    .q-text { font-size: 13.5px; font-weight: 600; color: var(--text-strong); line-height: 1.4; width: 100%; margin-top: 3px; }
+    .q-text-ar { font-size: 12.5px; font-weight: 400; color: var(--text-muted); margin-top: 4px; line-height: 1.4; direction: rtl; text-align: right; width: 100%; border-top: 1px dashed var(--border-card); padding-top: 4px; }
+    
+    .reset-btn { background: var(--bg-option); color: var(--text-muted); border: 1px solid var(--border-option); border-radius: 50%; width: 28px; height: 28px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; margin-left: auto; font-weight: 700; padding: 0; transition: all 0.2s; }
+    .reset-btn:hover { background: #d4a017; color: #0b1a33; border-color: #d4a017; }
+
+    /* ============ OPTIONS ============ */
+    .options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 10px; margin-bottom: 6px; margin-top: 8px; }
+    .options-grid.tf-grid { grid-template-columns: repeat(2, 1fr); max-width: 420px; }
+    .option-item { font-size: 12px; color: var(--text-option); background: var(--bg-option); padding: 8px 12px; border-radius: 5px; border: 1.5px solid var(--border-option); cursor: pointer; user-select: none; transition: all 0.15s ease; display: flex; align-items: center; min-height: 34px; }
+    .option-item:hover { background: var(--bg-option-hover); border-color: #d4a017; }
+    .option-item.correct { background-color: var(--correct-bg) !important; border-color: var(--correct-border) !important; color: var(--correct-text) !important; font-weight: 600; box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.25); }
+    .option-item.correct .option-letter { color: var(--correct-text) !important; }
+    .option-item.incorrect { background-color: var(--incorrect-bg) !important; border-color: var(--incorrect-border) !important; color: var(--incorrect-text) !important; font-weight: 600; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25); text-decoration: line-through; text-decoration-color: rgba(239, 68, 68, 0.5); }
+    .option-item.incorrect .option-letter { color: var(--incorrect-text) !important; }
+    .option-letter { font-weight: 700; color: #1e3a6b; margin-right: 6px; flex-shrink: 0; }
+    .container.dark-mode .option-letter { color: #f0b429; }
+
+    /* ============ ANSWER BOX ============ */
+    .answer-box { background: var(--bg-answer); border-left: 4px solid #d4a017; padding: 7px 12px; border-radius: 4px; font-size: 12px; margin-top: 8px; display: none; }
+    .answer-box.visible { display: block; }
+    .answer-title { color: var(--correct-text); font-weight: 700; margin-bottom: 3px; font-size: 12.5px; }
+    .rationale { color: var(--text-rationale); font-size: 12px; line-height: 1.45; }
+    .rationale-ar { color: var(--text-rationale); font-size: 12px; line-height: 1.45; direction: rtl; text-align: right; margin-top: 4px; border-top: 1px dashed rgba(212, 160, 23, 0.3); padding-top: 4px; }
+
+    /* ============ ESSAY ============ */
+    .essay-card { border: 1.5px solid var(--border-note); border-radius: 8px; padding: 14px 16px; background: var(--bg-card); break-inside: avoid; page-break-inside: avoid; margin-bottom: 10px; }
+    .essay-answer { background: var(--bg-essay-answer); border-left: 4px solid #d4a017; padding: 10px 14px; border-radius: 4px; margin-top: 10px; font-size: 12.5px; color: var(--text-rationale); line-height: 1.5; }
+    .essay-answer .essay-points { margin-top: 6px; padding-left: 18px; color: var(--text-rationale); }
+    .essay-answer .essay-points li { margin-bottom: 6px; }
+    .table-responsive { width: 100%; overflow-x: auto; margin-top: 8px; }
+    .essay-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 480px; }
+    .essay-table th, .essay-table td { border: 1px solid var(--border-note); padding: 7px 10px; text-align: left; vertical-align: top; color: var(--text-option); }
+    .essay-table th { background-color: var(--bg-option); color: var(--text-strong); font-weight: 700; }
+
+    /* ============ FOOTER ============ */
+    .footer { margin-top: 24px; padding-top: 10px; border-top: 1.5px solid var(--border-note); display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--text-muted); break-inside: avoid; flex-wrap: wrap; gap: 8px; }
+    .author-badge { font-weight: 700; color: #1e3a6b; }
+    .container.dark-mode .author-badge { color: #f0b429; }
+
+    /* ============ DARK MODE ADJUSTMENTS ============ */
+    .container.dark-mode .answer-box,
+    .container.dark-mode .answer-box .answer-title,
+    .container.dark-mode .answer-box .rationale,
+    .container.dark-mode .answer-box .rationale strong,
+    .container.dark-mode .essay-answer,
+    .container.dark-mode .essay-answer *,
+    .container.dark-mode .essay-answer .essay-points,
+    .container.dark-mode .essay-answer .essay-points li {
+      color: #ffffff !important;
+    }
+    .container.dark-mode .essay-answer .essay-table th { background-color: #1e3a6b !important; color: #ffffff !important; }
+    .container.dark-mode .essay-answer .essay-table td { border-color: #334155 !important; color: #ffffff !important; }
+    .container.dark-mode code { background: #1e293b; color: #fca5a5; }
+    .container.dark-mode .q-text-ar { color: #cbd5e1; border-top-color: #1e3a6b; }
+    .container.dark-mode .rationale-ar { border-top-color: #1e3a6b; }
+
+    /* ============ RESPONSIVE ============ */
+    @media screen and (max-width: 768px) {
+      .options-grid { grid-template-columns: 1fr; }
+      .header-details { grid-template-columns: 1fr 1fr; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .timer-box { justify-content: center; }
+      .btn-group { justify-content: center; }
+      .btn { padding: 8px 12px; font-size: 12px; }
+      .container { padding: 8mm 5mm; }
+    }
+    @media screen and (max-width: 420px) { .header-details { grid-template-columns: 1fr; } }
+
+    /* ============ PRINT ============ */
+    @media print {
+      @page { size: A4 portrait; margin: 8mm 6mm; }
+      body { background: #ffffff !important; padding: 0 !important; color: #000 !important; }
+      .container { box-shadow: none !important; max-width: 100% !important; padding: 0 !important; background: #ffffff !important; }
+      .no-print { display: none !important; }
+      .question-card, .essay-card, .notes-card { border-color: #cbd5e1 !important; break-inside: avoid !important; page-break-inside: avoid !important; margin-bottom: 8px !important; padding: 8px 10px !important; background: #ffffff !important; }
+      .options-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 4px 8px !important; }
+      .option-item { font-size: 9.5pt !important; padding: 4px 8px !important; min-height: auto !important; background: #f8fafc !important; color: #000 !important; border-color: #cbd5e1 !important; }
+      .option-item.correct { background: #fef9ec !important; border-color: #d4a017 !important; color: #7c5a08 !important; box-shadow: none !important; text-decoration: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .option-item.incorrect { background: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; box-shadow: none !important; text-decoration: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .answer-box, .essay-answer { background: #fef9ec !important; color: #7c5a08 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .answer-title, .rationale, .rationale-ar, .essay-answer .essay-points { color: #7c5a08 !important; }
+      .q-text { color: #000 !important; }
+      .q-text-ar { color: #333 !important; border-top-color: #cbd5e1 !important; }
+      .option-letter { color: #1e3a6b !important; }
+      .reset-btn { display: none !important; }
+      .section-divider { background: linear-gradient(135deg, #0b1a33 0%, #1e3a6b 100%) !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .q-number { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      code { background: #f1f5f9 !important; color: #b91c1c !important; border: 1px solid #cbd5e1; }
+    }
+    body.print-with-answers .answer-box,
+    body.print-with-answers .essay-answer { display: block !important; }
+    body.print-without-answers .answer-box,
+    body.print-without-answers .essay-answer { display: none !important; }
+    body.print-without-answers .option-item.correct,
+    body.print-without-answers .option-item.incorrect {
+      background: var(--bg-option) !important; border-color: var(--border-option) !important;
+      color: var(--text-option) !important; font-weight: normal !important;
+      box-shadow: none !important; text-decoration: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="mainContainer">
+
+    <!-- Toolbar & Timer -->
+    <div class="toolbar no-print">
+      <div class="timer-box">
+        ⏱️ Time Remaining: <span class="timer-display" id="timerDisplay">40:00</span>
+        <button class="btn btn-timer" id="startTimerBtn" onclick="toggleTimer()">▶ Start</button>
+        <button class="btn btn-timer" onclick="resetTimer()">↺ Reset</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-toggle" id="toggleAllBtn" onclick="toggleAllAnswers()">👁️ Show All Answers</button>
+        <button class="btn btn-theme" onclick="toggleTheme()" id="themeBtn">🌙 Dark Mode</button>
+        <div class="btn-dropdown" id="printDropdown">
+          <button class="btn btn-print" onclick="togglePrintDropdown(event)">🖨️ Print / PDF ▾</button>
+          <div class="dropdown-content">
+            <button onclick="printMode('with')">🖨️ Print WITH Answers</button>
+            <button onclick="printMode('without')">🖨️ Print WITHOUT Answers</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-top">
+        <div class="institution-info">
+          <h1>Cairo University — Faculty of Graduate Studies for Advanced Research</h1>
+          <h2>Master of Science in Software Engineering | Academic Year 2026 / 2027 (First Semester)</h2>
+        </div>
+        <div class="exam-tag">Lecture 2: Advanced MongoDB &amp; JSON Filters</div>
+      </div>
+      <div class="header-details">
+        <div class="detail-item">
+          <span>Course Title &amp; Code</span>
+          <strong>Advanced Database (SE203)</strong>
+        </div>
+        <div class="detail-item">
+          <span>Instructor</span>
+          <strong>Dr. Ashraf Shaheen</strong>
+        </div>
+        <div class="detail-item">
+          <span>Exam Timing &amp; Duration</span>
+          <strong>Duration: 40 Minutes</strong>
+        </div>
+        <div class="detail-item">
+          <span>Structure &amp; Rules</span>
+          <strong>3 Parts (MCQ, T/F, Essay) | All Obligatory</strong>
+        </div>
+      </div>
+    </header>
+
+    <!-- VIP Notes -->
+    <div class="section-divider">VIP Notes: MongoDB &amp; JSON Filters Core Concepts</div>
+    <div class="notes-page-container">
+      <section class="notes-card">
+        <div class="notes-title">KEY OPERATORS &amp; SYNTAX (Based on Lecture 2)</div>
+        <div class="notes-grid">
+          <div class="notes-item"><span class="notes-bullet">✦</span> <div><strong>Comparison Operators:</strong> <code>$gt</code> (Greater Than), <code>$gte</code> (Greater Than or Equal), <code>$lt</code> (Less Than), <code>$lte</code> (Less Than or Equal), <code>$ne</code> (Not Equal), <code>$eq</code> (Equal - usually implicit).</div></div>
+          <div class="notes-item"><span class="notes-bullet">✦</span> <div><strong>Logical Operators:</strong> <code>$and</code> (All conditions must match - implicit if separated by comma), <code>$or</code> (At least one condition matches), <code>$not</code> (Negates a condition).</div></div>
+          <div class="notes-item"><span class="notes-bullet">✦</span> <div><strong>Array &amp; Element Operators:</strong> <code>$in</code> (Matches any value in an array), <code>$nin</code> (Matches none of the values in an array), <code>$all</code> (Array field must contain all specified elements), <code>$exists</code> (Checks if a field exists).</div></div>
+          <div class="notes-item"><span class="notes-bullet">✦</span> <div><strong>JSON Structure:</strong> Documents are enclosed in <code>{}</code>. Arrays are enclosed in <code>[]</code>. Keys (fields) must be strings enclosed in double quotes <code>""</code>. Values can be strings, numbers, booleans, arrays, objects, or null.</div></div>
+          <div class="notes-item"><span class="notes-bullet">✦</span> <div><strong>Range Queries:</strong> Can be combined in one object: <code>{"salary": {"$gte": 19000, "$lte": 79000}}</code> or using <code>$and</code>: <code>{"$and": [{"salary": {"$gte": 19000}}, {"salary": {"$lte": 79000}}]}</code>.</div></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Part I: MCQs -->
+    <div class="section-divider page-break">Part I: Multiple Choice Questions (20 Questions)</div>
+    <main class="question-list">
+
+      <!-- Q1 -->
+      <article class="question-card" data-correct="C">
+        <div class="question-header">
+          <span class="q-number">Q1</span>
+          <p class="q-text">Write a JSON filter to retrieve employees with: <code>fname="Kim" and gender="F"</code></p>
+          <p class="q-text-ar">اكتب فلتر JSON لاسترجاع الموظفين بالشروط التالية: الاسم الأول = "Kim" و الجنس = "F"</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"$or": [{"fname": "Kim"}, {"gender": "F"}]}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"fname": "Kim", "gender": "F"}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"$and": [{"fname": "Kim"}, {"gender": "F"}]}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>{"fname": {"$eq": "Kim"}, "gender": {"$eq": "F"}}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: C</div>
+          <p class="rationale"><strong>Rationale:</strong> The <code>$and</code> operator explicitly requires all conditions in the array to be true. (Note: Option B is also valid as an implicit AND, but <code>$and</code> is the explicit logical operator for this condition).</p>
+          <p class="rationale-ar"><strong>السبب:</strong> المعامل <code>$and</code> يتطلب بشكل صريح أن تكون جميع الشروط داخل المصفوفة صحيحة. (ملاحظة: الخيار B صحيح أيضاً كعملية AND ضمنية، ولكن <code>$and</code> هو المعامل المنطقي الصريح لهذا الشرط).</p>
+        </div>
+      </article>
+
+      <!-- Q2 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">Q2</span>
+          <p class="q-text">Write a JSON filter for: <code>salary &gt;= 79000 or gender="F"</code></p>
+          <p class="q-text-ar">اكتب فلتر JSON للشرط التالي: الراتب أكبر من أو يساوي 79000 أو الجنس = "F"</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"$and": [{"salary": {"$gte": 79000}}, {"gender": "F"}]}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"$or": [{"salary": {"$gte": 79000}}, {"gender": "F"}]}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"salary": {"$gte": 79000}, "gender": "F"}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>{"salary": {"$or": 79000}, "gender": "F"}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B</div>
+          <p class="rationale"><strong>Rationale:</strong> The <code>$or</code> operator matches documents where at least one of the conditions in the array is true.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> المعامل <code>$or</code> يطابق المستندات التي يتحقق فيها شرط واحد على الأقل من الشروط الموجودة في المصفوفة.</p>
+        </div>
+      </article>
+
+      <!-- Q3 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">Q3</span>
+          <p class="q-text">Write a JSON filter for: <code>dno != 8 and gender="F"</code></p>
+          <p class="q-text-ar">اكتب فلتر JSON للشرط التالي: رقم القسم لا يساوي 8 و الجنس = "F"</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"$and": [{"dno": {"$ne": 8}}, {"gender": "F"}]}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"$or": [{"dno": {"$ne": 8}}, {"gender": "F"}]}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"dno": {"$not": 8}, "gender": "F"}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>{"dno": {"$neq": 8}, "gender": "F"}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$ne</code> means "not equal". Since both conditions must be satisfied, we use <code>$and</code>.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$ne</code> تعني "لا يساوي". وبما أنه يجب تحقيق كلا الشرطين معاً، نستخدم <code>$and</code>.</p>
+        </div>
+      </article>
+
+      <!-- Q4 -->
+      <article class="question-card" data-correct="D">
+        <div class="question-header">
+          <span class="q-number">Q4</span>
+          <p class="q-text">Write a JSON filter for: <code>dno is in {5,6}</code></p>
+          <p class="q-text-ar">اكتب فلتر JSON للشرط التالي: رقم القسم موجود ضمن المجموعة {5,6}</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"dno": {"$all": [5, 6]}}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"dno": {"$or": [5, 6]}}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"dno": {"$eq": [5, 6]}}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>{"dno": {"$in": [5, 6]}}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: D</div>
+          <p class="rationale"><strong>Rationale:</strong> The <code>$in</code> operator matches any document where the field value equals any value in the specified array.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> المعامل <code>$in</code> يطابق أي مستند تكون فيه قيمة الحقل مساوية لأي قيمة في المصفوفة المحددة.</p>
+        </div>
+      </article>
+
+      <!-- Q5 -->
+      <article class="question-card" data-correct="C">
+        <div class="question-header">
+          <span class="q-number">Q5</span>
+          <p class="q-text">Write a JSON filter for: <code>salary is not in {79000, 19000}</code></p>
+          <p class="q-text-ar">اكتب فلتر JSON للشرط التالي: الراتب غير موجود ضمن المجموعة {79000, 19000}</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"salary": {"$not": [79000, 19000]}}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"salary": {"$ne": [79000, 19000]}}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"salary": {"$nin": [79000, 19000]}}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>{"salary": {"$notin": [79000, 19000]}}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: C</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$nin</code> (Not In) matches documents where the field value is not equal to any value in the specified array.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$nin</code> (ليس ضمن) يطابق المستندات التي لا تكون فيها قيمة الحقل مساوية لأي قيمة في المصفوفة المحددة.</p>
+        </div>
+      </article>
+
+      <!-- Q6 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">Q6</span>
+          <p class="q-text">Write a JSON filter for: <code>79000 &gt;= salary &gt;= 19000 and dno=6</code></p>
+          <p class="q-text-ar">اكتب فلتر JSON للشرط التالي: الراتب بين 19000 و 79000 (شاملاً الطرفين) و رقم القسم = 6</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"$and": [{"salary": {"$lte": 79000}}, {"salary": {"$gte": 19000}}, {"dno": 6}]}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"salary": {"$gte": 19000, "$lte": 79000}, "dno": 6}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"salary": {"$between": [19000, 79000]}, "dno": 6}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>{"salary": [19000, 79000], "dno": 6}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A</div>
+          <p class="rationale"><strong>Rationale:</strong> Using <code>$and</code> with explicit <code>$lte</code> and <code>$gte</code> conditions on the salary field correctly represents the range and the dno condition (Option B is a valid shorthand, but A is more explicit for this condition).</p>
+          <p class="rationale-ar"><strong>السبب:</strong> استخدام <code>$and</code> مع شروط <code>$lte</code> و <code>$gte</code> الصريحة على حقل الراتب يمثل النطاق وشرط القسم بشكل صحيح (الخيار B اختصار صحيح، لكن A أكثر صراحة لهذا الشرط).</p>
+        </div>
+      </article>
+
+      <!-- Q7 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">Q7</span>
+          <p class="q-text">Write a JSON filter for: <code>not (dno &gt;= 5)</code></p>
+          <p class="q-text-ar">اكتب فلتر JSON للشرط التالي: ليس (رقم القسم أكبر من أو يساوي 5)</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"dno": {"$not": 5}}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"dno": {"$not": {"$gte": 5}}}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"$not": {"dno": {"$gte": 5}}}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>{"dno": {"$ne": {"$gte": 5}}}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B</div>
+          <p class="rationale"><strong>Rationale:</strong> The <code>$not</code> operator is used inside the field to negate the condition: <code>{"field": {"$not": {"$operator": value}}}</code>.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> يتم استخدام المعامل <code>$not</code> داخل الحقل لنفي الشرط بهذا الشكل: <code>{"field": {"$not": {"$operator": value}}}</code>.</p>
+        </div>
+      </article>
+
+      <!-- Q8 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">Q8</span>
+          <p class="q-text">Write a JSON filter to select documents where the <code>"class"</code> field contains <u>all</u> elements <code>"cs"</code> and <code>"it"</code>.</p>
+          <p class="q-text-ar">اكتب فلتر JSON لاختيار المستندات التي يحتوي فيها حقل "class" على <u>جميع</u> العناصر "cs" و "it".</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"class": {"$all": ["cs", "it"]}}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"class": {"$in": ["cs", "it"]}}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"class": {"$or": ["cs", "it"]}}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>{"class": {"$contains": ["cs", "it"]}}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A</div>
+          <p class="rationale"><strong>Rationale:</strong> The <code>$all</code> operator selects documents where the array field contains all the specified elements.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> المعامل <code>$all</code> يختار المستندات التي يحتوي فيها حقل المصفوفة على جميع العناصر المحددة.</p>
+        </div>
+      </article>
+
+      <!-- Q9 -->
+      <article class="question-card" data-correct="C">
+        <div class="question-header">
+          <span class="q-number">Q9</span>
+          <p class="q-text">Which operator is used to check if a field exists in a document?</p>
+          <p class="q-text-ar">أي معامل يُستخدم للتحقق من وجود حقل معين في مستند ما؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>$in</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>$has</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>$exists</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>$field</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: C</div>
+          <p class="rationale"><strong>Rationale:</strong> The <code>$exists</code> operator matches documents that have the specified field. Example: <code>{"end_date": {"$exists": false}}</code>.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> المعامل <code>$exists</code> يطابق المستندات التي تحتوي على الحقل المحدد. مثال: <code>{"end_date": {"$exists": false}}</code>.</p>
+        </div>
+      </article>
+
+      <!-- Q10 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">Q10</span>
+          <p class="q-text">How do you represent a list of phone numbers (e.g., 12345, 23456) for a single employee in a JSON document?</p>
+          <p class="q-text-ar">كيف تمثل قائمة بأرقام الهواتف (مثل 12345، 23456) لموظف واحد في مستند JSON؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>"mobile": "12345, 23456"</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>"mobile": [12345, 23456]</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>"mobile": {12345, 23456}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>"mobile": (12345, 23456)</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B</div>
+          <p class="rationale"><strong>Rationale:</strong> JSON uses square brackets <code>[]</code> to represent arrays (lists) of values.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> يستخدم JSON الأقواس المربعة <code>[]</code> لتمثيل المصفوفات (القوائم) التي تحتوي على قيم متعددة.</p>
+        </div>
+      </article>
+
+      <!-- Q11 -->
+      <article class="question-card" data-correct="D">
+        <div class="question-header">
+          <span class="q-number">Q11</span>
+          <p class="q-text">What is the correct syntax to represent two books in one JSON document?</p>
+          <p class="q-text-ar">ما هي الصيغة الصحيحة لتمثيل كتابين في مستند JSON واحد؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{ "book1": {...}, "book2": {...} }</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>[ { "id": 1, ... }, { "id": 7, ... } ]</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{ "books": [ { "id": 1, ... }, { "id": 7, ... } ] }</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> Both B and C are valid, but C is more descriptive.</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: D</div>
+          <p class="rationale"><strong>Rationale:</strong> While a raw array is valid JSON, wrapping the array inside an object with a descriptive key (like "books") is the standard practice for document databases.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> على الرغم من أن المصفوفة المجردة صيغة JSON صحيحة، إلا أن تغليف المصفوفة داخل كائن بمفتاح وصفي (مثل "books") هو الممارسة القياسية لقواعد بيانات المستندات.</p>
+        </div>
+      </article>
+
+      <!-- Q12 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">Q12</span>
+          <p class="q-text">In the JSON document <code>{"ssn": 123, "fname": "Ali", "has_licence": false}</code>, what is the data type of <code>"has_licence"</code>?</p>
+          <p class="q-text-ar">في مستند JSON التالي <code>{"ssn": 123, "fname": "Ali", "has_licence": false}</code>، ما هو نوع بيانات <code>"has_licence"</code>؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> Boolean</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> String</div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> Number</div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> Null</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A</div>
+          <p class="rationale"><strong>Rationale:</strong> The values <code>true</code> and <code>false</code> represent the Boolean data type in JSON.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> القيمتان <code>true</code> و <code>false</code> تمثلان نوع البيانات المنطقي (Boolean) في JSON.</p>
+        </div>
+      </article>
+
+      <!-- Q13 -->
+      <article class="question-card" data-correct="C">
+        <div class="question-header">
+          <span class="q-number">Q13</span>
+          <p class="q-text">Which operator is the opposite of <code>$gte</code>?</p>
+          <p class="q-text-ar">أي معامل يعتبر عكس المعامل <code>$gte</code>؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>$gt</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>$lte</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>$lt</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>$ne</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: C</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$gte</code> is "Greater Than or Equal". Its direct opposite is <code>$lt</code> (Less Than).</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$gte</code> تعني "أكبر من أو يساوي". عكسها المباشر هو <code>$lt</code> (أصغر من).</p>
+        </div>
+      </article>
+
+      <!-- Q14 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">Q14</span>
+          <p class="q-text">What does the operator <code>$nin</code> stand for?</p>
+          <p class="q-text-ar">ماذا يعني المعامل <code>$nin</code>؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> No Integer</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> Not In</div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> Not Include</div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> Neither In</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$nin</code> stands for "Not In" and is used to select documents where the field value is not in the specified array.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$nin</code> تعني "Not In" (ليس ضمن) وتُستخدم لتحديد المستندات التي لا تكون فيها قيمة الحقل ضمن المصفوفة المحددة.</p>
+        </div>
+      </article>
+
+      <!-- Q15 -->
+      <article class="question-card" data-correct="D">
+        <div class="question-header">
+          <span class="q-number">Q15</span>
+          <p class="q-text">If you want to find employees whose salary is exactly 19000, which of the following is the most standard MongoDB query?</p>
+          <p class="q-text-ar">إذا كنت تريد البحث عن الموظفين الذين راتبهم يساوي 19000 بالضبط، أي من الاستعلامات التالية هو الأكثر شيوعاً في MongoDB؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"salary": 19000}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"salary": {"$eq": 19000}}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"salary": {"$is": 19000}}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> Both A and B are correct.</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: D</div>
+          <p class="rationale"><strong>Rationale:</strong> In MongoDB, an implicit equality match is done by simply specifying the value (<code>{"salary": 19000}</code>). You can also use the explicit <code>$eq</code> operator.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> في MongoDB، تتم مطابقة المساواة الضمنية بمجرد تحديد القيمة مباشرة (<code>{"salary": 19000}</code>). يمكنك أيضاً استخدام المعامل الصريح <code>$eq</code>.</p>
+        </div>
+      </article>
+
+      <!-- Q16 -->
+      <article class="question-card" data-correct="C">
+        <div class="question-header">
+          <span class="q-number">Q16</span>
+          <p class="q-text">Which operator is used to combine multiple conditions where ALL must be true?</p>
+          <p class="q-text-ar">أي معامل يُستخدم لدمج شروط متعددة يجب أن تتحقق <u>جميعها</u>؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>$or</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>$not</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>$and</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>$all</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: C</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$and</code> performs a logical AND operation, requiring all specified conditions to match.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> يقوم <code>$and</code> بعملية منطقية AND، حيث يتطلب تحقق جميع الشروط المحددة.</p>
+        </div>
+      </article>
+
+      <!-- Q17 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">Q17</span>
+          <p class="q-text">What is the purpose of the <code>$all</code> operator?</p>
+          <p class="q-text-ar">ما هو الغرض من المعامل <code>$all</code>؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> Selects documents where the field matches at least one element.</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> Selects documents where the array field contains all the specified elements.</div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> Counts all elements in an array.</div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> Updates all documents in a collection.</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$all</code> matches arrays that contain every element listed in the query.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$all</code> يطابق المصفوفات التي تحتوي على كل عنصر مذكور في الاستعلام.</p>
+        </div>
+      </article>
+
+      <!-- Q18 -->
+      <article class="question-card" data-correct="D">
+        <div class="question-header">
+          <span class="q-number">Q18</span>
+          <p class="q-text">Complete the JSON document: <code>{"pname": "ProductX", "pnumber": 1, "plocations": ["Cairo", "Giza"], "dept_no": 5, ?}</code></p>
+          <p class="q-text-ar">أكمل مستند JSON التالي: <code>{"pname": "ProductX", "pnumber": 1, "plocations": ["Cairo", "Giza"], "dept_no": 5, ?}</code></p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>"has_manager": "false"</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>has_manager: false</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>"has_manager": False</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>"has_manager": false</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: D</div>
+          <p class="rationale"><strong>Rationale:</strong> Keys must be in double quotes, and boolean values in JSON are lowercase (<code>true</code> or <code>false</code>).</p>
+          <p class="rationale-ar"><strong>السبب:</strong> يجب أن تكون المفاتيح بين علامتي تنصيص مزدوجتين، والقيم المنطقية في JSON تكون بأحرف صغيرة (<code>true</code> أو <code>false</code>).</p>
+        </div>
+      </article>
+
+      <!-- Q19 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">Q19</span>
+          <p class="q-text">Which operator is used to find documents where a specific field does NOT exist?</p>
+          <p class="q-text-ar">أي معامل يُستخدم للعثور على المستندات التي <u>لا</u> يوجد فيها حقل معين؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>{"field": {"$exists": false}}</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>{"field": {"$not": true}}</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>{"field": {"$null": true}}</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>{"field": {"$missing": true}}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A</div>
+          <p class="rationale"><strong>Rationale:</strong> Setting <code>$exists</code> to <code>false</code> finds documents that lack the specified field.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> تعيين <code>$exists</code> إلى <code>false</code> يجد المستندات التي تفتقر إلى الحقل المحدد.</p>
+        </div>
+      </article>
+
+      <!-- Q20 -->
+      <article class="question-card" data-correct="C">
+        <div class="question-header">
+          <span class="q-number">Q20</span>
+          <p class="q-text">What is the correct JSON representation of a string with multiple authors (Ahmed and Ali) for a book?</p>
+          <p class="q-text-ar">ما هو التمثيل الصحيح في JSON لمؤلفين متعددين (Ahmed و Ali) لكتاب ما؟</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> <code>"authors": "Ahmed, Ali"</code></div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> <code>"authors": "Ahmed and Ali"</code></div>
+          <div class="option-item" data-opt="C"><span class="option-letter">C)</span> <code>"authors": ["Ahmed", "Ali"]</code></div>
+          <div class="option-item" data-opt="D"><span class="option-letter">D)</span> <code>"authors": {"Ahmed", "Ali"}</code></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: C</div>
+          <p class="rationale"><strong>Rationale:</strong> To store a list of values in JSON, an array (using square brackets <code>[]</code>) is the correct approach.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> لتخزين قائمة من القيم في JSON، الطريقة الصحيحة هي استخدام مصفوفة (باستخدام الأقواس المربعة <code>[]</code>).</p>
+        </div>
+      </article>
+
+    </main>
+
+    <!-- Part II: True or False -->
+    <div class="section-divider page-break">Part II: True or False Questions (10 Questions)</div>
+    <main class="question-list">
+
+      <!-- TF 1 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">TF 1</span>
+          <p class="q-text">In JSON, keys must be enclosed in double quotes.</p>
+          <p class="q-text-ar">في JSON، يجب أن تكون المفاتيح محاطة بعلامات تنصيص مزدوجة.</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A (True)</div>
+          <p class="rationale"><strong>Rationale:</strong> Standard JSON requires field names (keys) to be strings enclosed in double quotes <code>""</code>.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> يتطلب JSON القياسي أن تكون أسماء الحقول (المفاتيح) نصوصاً محاطة بعلامات تنصيص مزدوجة <code>""</code>.</p>
+        </div>
+      </article>
+
+      <!-- TF 2 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">TF 2</span>
+          <p class="q-text">The <code>$in</code> operator requires the field to match ALL elements in the provided array.</p>
+          <p class="q-text-ar">المعامل <code>$in</code> يتطلب أن يطابق الحقل <u>جميع</u> العناصر في المصفوفة المقدمة.</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B (False)</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$in</code> requires the field to match AT LEAST ONE element. To match ALL elements, you use <code>$all</code>.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$in</code> يتطلب أن يطابق الحقل <u>عنصراً واحداً على الأقل</u>. لمطابقة جميع العناصر، يجب استخدام <code>$all</code>.</p>
+        </div>
+      </article>
+
+      <!-- TF 3 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">TF 3</span>
+          <p class="q-text">The <code>$ne</code> operator stands for "Not Equal".</p>
+          <p class="q-text-ar">المعامل <code>$ne</code> يعني "لا يساوي" (Not Equal).</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A (True)</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$ne</code> is the MongoDB operator for inequality (Not Equal).</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$ne</code> هو معامل MongoDB لعدم المساواة (لا يساوي).</p>
+        </div>
+      </article>
+
+      <!-- TF 4 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">TF 4</span>
+          <p class="q-text">In JSON, boolean values must be written in uppercase (True/False).</p>
+          <p class="q-text-ar">في JSON، يجب كتابة القيم المنطقية (Boolean) بأحرف كبيرة (True/False).</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B (False)</div>
+          <p class="rationale"><strong>Rationale:</strong> JSON booleans must be lowercase (<code>true</code> or <code>false</code>).</p>
+          <p class="rationale-ar"><strong>السبب:</strong> يجب أن تكون القيم المنطقية في JSON بأحرف صغيرة (<code>true</code> أو <code>false</code>).</p>
+        </div>
+      </article>
+
+      <!-- TF 5 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">TF 5</span>
+          <p class="q-text">The <code>$lte</code> operator means "Less Than or Equal To".</p>
+          <p class="q-text-ar">المعامل <code>$lte</code> يعني "أصغر من أو يساوي" (Less Than or Equal To).</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A (True)</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$lte</code> is the standard abbreviation for Less Than or Equal.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$lte</code> هو الاختصار القياسي لعبارة Less Than or Equal (أصغر من أو يساوي).</p>
+        </div>
+      </article>
+
+      <!-- TF 6 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">TF 6</span>
+          <p class="q-text">To search for documents where a field is missing, you use the <code>$nin</code> operator.</p>
+          <p class="q-text-ar">للبحث عن المستندات التي يفتقد فيها حقل معين، يجب استخدام المعامل <code>$nin</code>.</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B (False)</div>
+          <p class="rationale"><strong>Rationale:</strong> To find missing fields, you should use <code>{"field": {"$exists": false}}</code>, not <code>$nin</code>.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> للعثور على الحقول المفقودة، يجب استخدام <code>{"field": {"$exists": false}}</code>، وليس <code>$nin</code>.</p>
+        </div>
+      </article>
+
+      <!-- TF 7 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">TF 7</span>
+          <p class="q-text">A JSON document can contain nested objects and arrays.</p>
+          <p class="q-text-ar">يمكن أن يحتوي مستند JSON على كائنات ومصفوفات متداخلة.</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A (True)</div>
+          <p class="rationale"><strong>Rationale:</strong> JSON supports hierarchical structures, allowing objects within objects and arrays of objects.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> يدعم JSON الهياكل الهرمية، مما يسمح بوجود كائنات داخل كائنات أخرى ومصفوفات من الكائنات.</p>
+        </div>
+      </article>
+
+      <!-- TF 8 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">TF 8</span>
+          <p class="q-text">In MongoDB, the <code>$or</code> operator requires all specified conditions to be true.</p>
+          <p class="q-text-ar">في MongoDB، يتطلب المعامل <code>$or</code> أن تكون جميع الشروط المحددة صحيحة.</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B (False)</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$or</code> requires only AT LEAST ONE condition to be true. <code>$and</code> requires all to be true.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$or</code> يتطلب تحقق <u>شرط واحد على الأقل</u>. بينما <code>$and</code> يتطلب تحقق جميع الشروط.</p>
+        </div>
+      </article>
+
+      <!-- TF 9 -->
+      <article class="question-card" data-correct="A">
+        <div class="question-header">
+          <span class="q-number">TF 9</span>
+          <p class="q-text">The query <code>{"salary": {"$gte": 19000, "$lte": 79000}}</code> is a valid way to specify a range in MongoDB.</p>
+          <p class="q-text-ar">الاستعلام <code>{"salary": {"$gte": 19000, "$lte": 79000}}</code> هو طريقة صحيحة لتحديد نطاق في MongoDB.</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: A (True)</div>
+          <p class="rationale"><strong>Rationale:</strong> You can combine multiple comparison operators for the same field within a single object.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> يمكنك دمج عدة معاملات مقارنة لنفس الحقل داخل كائن واحد.</p>
+        </div>
+      </article>
+
+      <!-- TF 10 -->
+      <article class="question-card" data-correct="B">
+        <div class="question-header">
+          <span class="q-number">TF 10</span>
+          <p class="q-text">The <code>$all</code> operator is used to find documents where the array field contains at least one of the specified elements.</p>
+          <p class="q-text-ar">يُستخدم المعامل <code>$all</code> للعثور على المستندات التي يحتوي فيها حقل المصفوفة على عنصر واحد على الأقل من العناصر المحددة.</p>
+          <button class="reset-btn no-print" onclick="resetQuestion(this)" title="Reset">↺</button>
+        </div>
+        <div class="options-grid tf-grid">
+          <div class="option-item" data-opt="A"><span class="option-letter">A)</span> True</div>
+          <div class="option-item" data-opt="B"><span class="option-letter">B)</span> False</div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-title">✓ Correct Answer: B (False)</div>
+          <p class="rationale"><strong>Rationale:</strong> <code>$all</code> requires the array to contain ALL specified elements. To match at least one, you use <code>$in</code>.</p>
+          <p class="rationale-ar"><strong>السبب:</strong> <code>$all</code> يتطلب أن تحتوي المصفوفة على <u>جميع</u> العناصر المحددة. لمطابقة عنصر واحد على الأقل، يتم استخدام <code>$in</code>.</p>
+        </div>
+      </article>
+
+    </main>
+
+    <!-- Part III: Essay Questions -->
+    <div class="section-divider page-break">Part III: Essay Questions &amp; Model Answers (10 Questions)</div>
+    <main class="question-list">
+
+      <!-- Essay 1 -->
+      <article class="essay-card">
+        <span class="q-number">E1</span>
+        <p class="q-text">Write a JSON document to represent the following Employee data: ssn=123, fname=Ali, minit=A, lname=Mohamed, gender=M, mobile= 12345, 23456 and 34567, has_licence=false, dno=8.</p>
+        <p class="q-text-ar">اكتب مستند JSON لتمثيل بيانات الموظف التالية: (ssn=123, fname=Ali, minit=A, lname=Mohamed, gender=M, mobile= 12345, 23456 and 34567, has_licence=false, dno=8).</p>
+        <div class="essay-answer">
+          <pre>{
+  "ssn": 123,
+  "fname": "Ali",
+  "minit": "A",
+  "lname": "Mohamed",
+  "gender": "M",
+  "mobile": [12345, 23456, 34567],
+  "has_licence": false,
+  "dno": 8
+}</pre>
+        </div>
+      </article>
+
+      <!-- Essay 2 -->
+      <article class="essay-card">
+        <span class="q-number">E2</span>
+        <p class="q-text">Write a JSON document to represent the following Project data: pname = ProductX, pnumber = 1, plocations = Cairo and Giza, dept_no = 5, has_manager = false.</p>
+        <p class="q-text-ar">اكتب مستند JSON لتمثيل بيانات المشروع التالية: (pname = ProductX, pnumber = 1, plocations = Cairo and Giza, dept_no = 5, has_manager = false).</p>
+        <div class="essay-answer">
+          <pre>{
+  "pname": "ProductX",
+  "pnumber": 1,
+  "plocations": ["Cairo", "Giza"],
+  "dept_no": 5,
+  "has_manager": false
+}</pre>
+        </div>
+      </article>
+
+      <!-- Essay 3 -->
+      <article class="essay-card">
+        <span class="q-number">E3</span>
+        <p class="q-text">Write one JSON document to represent the following two books' data.<br>Book 1: id = 1, language = Java, edition = third, authors = Ahmed and Ali.<br>Book 2: id = 7, language = C++, edition = second, authors = Hasan and Ibrahim.</p>
+        <p class="q-text-ar">اكتب مستند JSON واحد لتمثيل بيانات الكتابين التاليين:<br>الكتاب 1: (id = 1, language = Java, edition = third, authors = Ahmed and Ali).<br>الكتاب 2: (id = 7, language = C++, edition = second, authors = Hasan and Ibrahim).</p>
+        <div class="essay-answer">
+          <pre>{ "books": [
+    { "id": 1,
+      "language": "Java",
+      "edition": "third",
+      "authors": [ "Ahmed", "Ali" ]
+    },
+    { "id": 7,
+      "language": "C++",
+      "edition": "second",
+      "authors": [ "Hasan", "Ibrahim" ]
+    }
+  ]
+}</pre>
+        </div>
+      </article>
+
+      <!-- Essay 4 -->
+      <article class="essay-card">
+        <span class="q-number">E4</span>
+        <p class="q-text">Explain the difference between the <code>$in</code> and <code>$all</code> operators in MongoDB, providing an example for each.</p>
+        <p class="q-text-ar">اشرح الفرق بين المعاملين <code>$in</code> و <code>$all</code> في MongoDB، مع إعطاء مثال لكل منهما.</p>
+        <div class="essay-answer">
+          <ul class="essay-points">
+            <li><strong>$in:</strong> Matches documents where the field value equals ANY of the values in the specified array. It acts like a logical OR for array elements. <br><em>Example:</em> <code>{"dno": {"$in": [5, 6]}}</code> finds documents where dno is 5 OR 6.</li>
+            <li><strong>$all:</strong> Matches documents where the array field contains ALL the specified elements. It acts like a logical AND for array elements. <br><em>Example:</em> <code>{"class": {"$all": ["cs", "it"]}}</code> finds documents where the class array contains BOTH "cs" and "it".</li>
+          </ul>
+          <hr style="margin: 10px 0; border: 0; border-top: 1px dashed rgba(212, 160, 23, 0.3);">
+          <ul class="essay-points" style="direction: rtl; text-align: right;">
+            <li><strong>$in (ضمن):</strong> يطابق المستندات التي تكون فيها قيمة الحقل مساوية لأي من القيم في المصفوفة المحددة. يعمل كعملية OR منطقية لعناصر المصفوفة. <br><em>مثال:</em> <code>{"dno": {"$in": [5, 6]}}</code> يجد المستندات التي يكون فيها dno يساوي 5 أو 6.</li>
+            <li><strong>$all (الكل):</strong> يطابق المستندات التي يحتوي فيها حقل المصفوفة على جميع العناصر المحددة. يعمل كعملية AND منطقية لعناصر المصفوفة. <br><em>مثال:</em> <code>{"class": {"$all": ["cs", "it"]}}</code> يجد المستندات التي تحتوي فيها مصفوفة class على كل من "cs" و "it".</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Essay 5 -->
+      <article class="essay-card">
+        <span class="q-number">E5</span>
+        <p class="q-text">Write the JSON filter to retrieve employees where the salary is between 19000 and 79000 (inclusive) and the department number is 6. Show two different valid ways to write this query.</p>
+        <p class="q-text-ar">اكتب فلتر JSON لاسترجاع الموظفين الذين يتراوح راتبهم بين 19000 و 79000 (شاملاً الطرفين) ورقم قسمهم 6. اعرض طريقتين صحيحتين مختلفتين لكتابة هذا الاستعلام.</p>
+        <div class="essay-answer">
+          <p><strong>Method 1 (Implicit AND with combined operators):</strong></p>
+          <pre>{
+  "salary": { "$gte": 19000, "$lte": 79000 },
+  "dno": 6
+}</pre>
+          <p><strong>Method 2 (Explicit $and):</strong></p>
+          <pre>{
+  "$and": [
+    { "salary": { "$gte": 19000 } },
+    { "salary": { "$lte": 79000 } },
+    { "dno": 6 }
+  ]
+}</pre>
+        </div>
+      </article>
+
+      <!-- Essay 6 -->
+      <article class="essay-card">
+        <span class="q-number">E6</span>
+        <p class="q-text">Write a JSON filter to find employees who have the gender "F" OR whose salary is greater than or equal to 79000, using the explicit logical operator.</p>
+        <p class="q-text-ar">اكتب فلتر JSON للعثور على الموظفين الذين جنسهم "F" أو راتبهم أكبر من أو يساوي 79000، باستخدام المعامل المنطقي الصريح.</p>
+        <div class="essay-answer">
+          <pre>{
+  "$or": [
+    { "gender": "F" },
+    { "salary": { "$gte": 79000 } }
+  ]
+}</pre>
+        </div>
+      </article>
+
+      <!-- Essay 7 -->
+      <article class="essay-card">
+        <span class="q-number">E7</span>
+        <p class="q-text">Explain the purpose of the <code>$exists</code> operator and provide a query to find documents where the "end_date" field does not exist.</p>
+        <p class="q-text-ar">اشرح الغرض من المعامل <code>$exists</code> وقدم استعلاماً للعثور على المستندات التي لا يوجد فيها الحقل "end_date".</p>
+        <div class="essay-answer">
+          <ul class="essay-points">
+            <li><strong>Purpose:</strong> The <code>$exists</code> operator is used to check for the presence (or absence) of a field in a document. It takes a boolean value (<code>true</code> or <code>false</code>).</li>
+            <li><strong>Query:</strong> <code>{"end_date": {"$exists": false}}</code> will return all documents that do not have the "end_date" field.</li>
+          </ul>
+          <hr style="margin: 10px 0; border: 0; border-top: 1px dashed rgba(212, 160, 23, 0.3);">
+          <ul class="essay-points" style="direction: rtl; text-align: right;">
+            <li><strong>الغرض:</strong> يُستخدم المعامل <code>$exists</code> للتحقق من وجود (أو عدم وجود) حقل معين في مستند ما. يأخذ قيمة منطقية (<code>true</code> أو <code>false</code>).</li>
+            <li><strong>الاستعلام:</strong> <code>{"end_date": {"$exists": false}}</code> سيعيد جميع المستندات التي لا تحتوي على الحقل "end_date".</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Essay 8 -->
+      <article class="essay-card">
+        <span class="q-number">E8</span>
+        <p class="q-text">Translate the following logical condition into a MongoDB JSON filter: "The department number must not be 8 AND the gender must be F."</p>
+        <p class="q-text-ar">ترجم الشرط المنطقي التالي إلى فلتر JSON في MongoDB: "رقم القسم يجب ألا يكون 8 و الجنس يجب أن يكون F".</p>
+        <div class="essay-answer">
+          <pre>{
+  "$and": [
+    { "dno": { "$ne": 8 } },
+    { "gender": "F" }
+  ]
+}</pre>
+          <p><em>(Note: It can also be written implicitly as <code>{"dno": {"$ne": 8}, "gender": "F"}</code>).</em></p>
+          <p style="direction: rtl; text-align: right;"><em>(ملاحظة: يمكن كتابتها أيضاً بشكل ضمني كـ <code>{"dno": {"$ne": 8}, "gender": "F"}</code>).</em></p>
+        </div>
+      </article>
+
+      <!-- Essay 9 -->
+      <article class="essay-card">
+        <span class="q-number">E9</span>
+        <p class="q-text">Write a JSON filter using the <code>$not</code> operator to find employees whose department number is NOT greater than or equal to 5.</p>
+        <p class="q-text-ar">اكتب فلتر JSON باستخدام المعامل <code>$not</code> للعثور على الموظفين الذين لا يكون رقم قسمهم أكبر من أو يساوي 5.</p>
+        <div class="essay-answer">
+          <pre>{
+  "dno": {
+    "$not": { "$gte": 5 }
+  }
+}</pre>
+        </div>
+      </article>
+
+      <!-- Essay 10 -->
+      <article class="essay-card">
+        <span class="q-number">E10</span>
+        <p class="q-text">Write a JSON query to find employees whose salary is neither 79000 nor 19000.</p>
+        <p class="q-text-ar">اكتب استعلام JSON للعثور على الموظفين الذين لا يكون راتبهم 79000 ولا 19000.</p>
+        <div class="essay-answer">
+          <pre>{
+  "salary": {
+    "$nin": [79000, 19000]
+  }
+}</pre>
+        </div>
+      </article>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-left">Cairo University — Faculty of Graduate Studies for Advanced Research | Dept. of Software Engineering</div>
+      <div class="footer-signature">Instructor: <span class="author-badge">Dr. Ashraf Shaheen</span></div>
+    </footer>
+
+  </div>
+
+  <!-- JavaScript Engine -->
+  <script>
+    /* ============ TIMER LOGIC ============ */
+    let timeRemaining = 40 * 60; // 40 minutes in seconds
+    let timerInterval = null;
+    let isRunning = false;
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeRemaining / 60);
+      const seconds = timeRemaining % 60;
+      const display = document.getElementById('timerDisplay');
+      display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      if (timeRemaining <= 300) { // Last 5 minutes
+        display.classList.add('warning');
+      } else {
+        display.classList.remove('warning');
+      }
+
+      if (timeRemaining <= 0) {
+        clearInterval(timerInterval);
+        isRunning = false;
+        document.getElementById('startTimerBtn').textContent = '▶ Start';
+        alert("Time is up! Please stop writing.");
+      }
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('startTimerBtn');
+      if (isRunning) {
+        clearInterval(timerInterval);
+        btn.textContent = '▶ Resume';
+        isRunning = false;
+      } else {
+        timerInterval = setInterval(() => {
+          if (timeRemaining > 0) {
+            timeRemaining--;
+            updateTimerDisplay();
+          }
+        }, 1000);
+        btn.textContent = '⏸ Pause';
+        isRunning = true;
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timeRemaining = 40 * 60;
+      isRunning = false;
+      document.getElementById('startTimerBtn').textContent = '▶ Start';
+      updateTimerDisplay();
+    }
+    
+    updateTimerDisplay(); // Initial call
+
+    /* ============ THEME CONTROLLER ============ */
+    function toggleTheme() {
+      const container = document.getElementById('mainContainer');
+      container.classList.toggle('dark-mode');
+      const isDark = container.classList.contains('dark-mode');
+      document.getElementById('themeBtn').textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+      try { localStorage.setItem('se203-exam-theme', isDark ? 'dark' : 'light'); } catch(e) {}
+    }
+    (function initTheme() {
+      try {
+        const saved = localStorage.getItem('se203-exam-theme');
+        if (saved === 'dark') {
+          document.getElementById('mainContainer').classList.add('dark-mode');
+          document.getElementById('themeBtn').textContent = '☀️ Light Mode';
+        }
+      } catch(e) {}
+    })();
+
+    /* ============ TOGGLE ALL ANSWERS ============ */
+    let allVisible = false;
+    function toggleAllAnswers() {
+      allVisible = !allVisible;
+      document.querySelectorAll('.answer-box').forEach(box => { box.classList.toggle('visible', allVisible); });
+      document.querySelectorAll('.essay-answer').forEach(box => { box.style.display = allVisible ? 'block' : 'none'; });
+      document.getElementById('toggleAllBtn').textContent = allVisible ? '🙈 Hide All Answers' : '👁️ Show All Answers';
+    }
+
+    /* ============ MCQ & TF INTERACTIVITY ============ */
+    document.querySelectorAll('.question-card').forEach(card => {
+      const correctOpt = card.getAttribute('data-correct');
+      const options = card.querySelectorAll('.option-item');
+      const answerBox = card.querySelector('.answer-box');
+
+      options.forEach(opt => {
+        opt.addEventListener('click', function() {
+          if (card.dataset.solved === 'true') return;
+          if (this.classList.contains('correct') || this.classList.contains('incorrect')) return;
+          const selected = this.getAttribute('data-opt');
+          if (selected === correctOpt) {
+            this.classList.add('correct');
+            card.dataset.solved = 'true';
+            if (answerBox) answerBox.classList.add('visible');
+          } else {
+            this.classList.add('incorrect');
+          }
+        });
+      });
+    });
+
+    /* ============ RESET INDIVIDUAL QUESTION ============ */
+    function resetQuestion(btn) {
+      const card = btn.closest('.question-card');
+      card.querySelectorAll('.option-item').forEach(o => o.classList.remove('correct', 'incorrect'));
+      const box = card.querySelector('.answer-box');
+      if (box) box.classList.remove('visible');
+      card.dataset.solved = 'false';
+    }
+
+    /* ============ PRINT CONTROLLER ============ */
+    function togglePrintDropdown(e) { e.stopPropagation(); document.getElementById('printDropdown').classList.toggle('open'); }
+    document.addEventListener('click', function() { document.getElementById('printDropdown').classList.remove('open'); });
+
+    function printMode(mode) {
+      document.body.classList.remove('print-with-answers', 'print-without-answers');
+      document.body.classList.add(mode === 'with' ? 'print-with-answers' : 'print-without-answers');
+      window.print();
+      setTimeout(() => { document.body.classList.remove('print-with-answers', 'print-without-answers'); }, 1000);
+    }
+  </script>
+</body>
+</html>
